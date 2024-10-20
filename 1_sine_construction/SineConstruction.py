@@ -1,3 +1,5 @@
+# SineConstruction.py
+
 # Script to create an animation that demonstrates the construction of a sine function using Manim library.
 
 from manim import *
@@ -109,12 +111,12 @@ class SineConstruction(MovingCameraScene):
 
         # Create the sine curve
         sine_curve = VMobject(color=RED)
-        dot_on_circle = Dot(color=GREEN)
-        dot_on_curve = Dot(color=RED)
+        dot_on_circle = Dot(circle.point_from_proportion(angle.get_value() / TAU), color=GREEN)
+        dot_on_curve = Dot(circle.get_center(), color=RED)
 
         # Labels for points
-        p_label = always_redraw(lambda: MathTex("P").next_to(dot_on_circle, UR, buff=0.1).scale(0.7))
-        y_p_label = always_redraw(lambda: MathTex("y_P").next_to(dot_on_curve, RIGHT, buff=0.1).scale(0.7))
+        p_label = always_redraw(lambda: MathTex("P").next_to(dot_on_circle, UR, buff=0.1).scale(0.6))
+        y_p_label = always_redraw(lambda: MathTex("y_P").next_to(dot_on_curve, RIGHT, buff=0.1).scale(0.6))
 
         # Create dashed line connecting P to y_P
         dashed_line = always_redraw(lambda: DashedLine(
@@ -139,22 +141,23 @@ class SineConstruction(MovingCameraScene):
 
         # Create the example points
         O_example = Dot([0,0,0])
-        O_example_label = MathTex(r"O").next_to(O_example, DL, buff=0.1).scale(0.7)
+        O_example_label = MathTex(r"O").next_to(O_example, DL, buff=0.1).scale(0.6)
         example_circle = Circle(radius=2, color=BLUE)
-        example_angle = ValueTracker(PI/4)
+        example_angle = ValueTracker(PI/3)
         example_line = always_redraw(lambda: Line(example_circle.get_center(), example_circle.point_from_proportion(example_angle.get_value() / TAU), color=GREEN))
         example_arc = Sector(radius=0.5, angle=example_angle.get_value(), color=GREEN, fill_color=GREEN).set_opacity(0.2).shift(example_circle.get_center())
 
         P_example = Dot(example_circle.point_from_proportion(example_angle.get_value() / TAU), color=GREEN)
-        P_example_label = MathTex(r"P").next_to(P_example, UR, buff=0.1).scale(0.7)
-        dashed_line_example = DashedLine(
+        P_example_label = MathTex(r"P").next_to(P_example, UR, buff=0.1).scale(0.6)
+        example_dashed_line = DashedLine(
             start=P_example.get_center(),
             end=Dot(point=[P_example.get_x(),0,0]).get_center(),
             color=RED,
             dash_length=0.1
         )
 
-        example_angle_label = MathTex(r"\alpha").next_to(example_arc, 0.2*RIGHT, buff=0.1).scale(0.7)
+        example_angle_label = MathTex(r"\alpha").move_to([.5,.25,0]).scale(0.6)
+        example_dashed_label = MathTex(r"\sin\alpha").next_to(example_dashed_line, 0.001*RIGHT , buff=0.1).scale(0.6)
 
         # Create the complete sine function
         sine_function = extended_axes.plot(lambda x: np.sin(x), x_range=(-20,20), color=RED)
@@ -177,10 +180,10 @@ class SineConstruction(MovingCameraScene):
         self.wait(3)
         self.play(ReplacementTransform(definition_text_1, definition_text_2))
         self.wait(1)
-        self.play(Create(dashed_line_example))
-        self.wait(3)
+        self.play(Create(example_dashed_line), Create(example_dashed_label))
+        self.wait(4)
 
-        example_group = VGroup(P_example, P_example_label,example_line,example_arc, dashed_line_example, definition_text_2, example_angle_label, O_example, O_example_label)
+        example_group = VGroup(P_example, P_example_label,example_line,example_arc, example_dashed_line, example_dashed_label, definition_text_2, example_angle_label, O_example, O_example_label)
 
         self.play(*[FadeOut(mob) for mob in example_group])
 
@@ -193,9 +196,12 @@ class SineConstruction(MovingCameraScene):
 
         # Animate the construction
         self.play(Write(animation_text))
-        sine_construction = VGroup(line, arc, sine_curve, dot_on_circle, dot_on_curve, p_label, y_p_label, dashed_line)
+        sine_construction = VGroup(sine_curve, dot_on_circle, dot_on_curve, p_label, y_p_label, dashed_line)
+        self.play(Create(line), Create(arc))
         self.play(*[FadeIn(mob)for mob in sine_construction])
-        self.play(angle.animate.set_value(TAU), run_time=11, rate_func=smoothererstep)
+        #self.add(sine_curve, dot_on_circle, dot_on_curve, p_label, y_p_label, dashed_line)
+        self.wait(1)
+        self.play(angle.animate.set_value(TAU), run_time=12, rate_func=smoothererstep)
         sine_curve.clear_updaters()
         sine = construction_axes.plot(lambda x: np.sin(x), x_range=(0,TAU), color=RED)
         self.add(sine)
