@@ -301,7 +301,7 @@ class TangentConstruction(MovingCameraScene):
         delta = np.arctan(1.0 / EX_CLIP)   # ≈ 0.257 rad
 
         Y_DASH     = 2.0
-        delta_dash = np.arctan(1.0 / Y_DASH)   # ≈ 0.4636 rad: |tan| = 2, inizio tratto tratteggiato
+        delta_dash = np.arctan(1.0 / Y_DASH)   # ≈ 0.4636 rad: |tan| = 2, where the dashes start
 
         ext_asym_xs = [-7*PI/2, -5*PI/2, -3*PI/2, -PI/2, PI/2, 3*PI/2, 5*PI/2, 7*PI/2]
 
@@ -419,7 +419,7 @@ class TangentConstruction(MovingCameraScene):
         )
         self.play(Create(line), Create(arc))
         self.play(Create(const_tan_line))
-        # Oggetti always_redraw: si aggiungono con add(); i Dot semplici vengono animati con FadeIn.
+        # always_redraw objects go straight in with add(); plain Dots can still use FadeIn.
         self.add(tangent_curve_1, Q_line, dashed_line)
         self.play(*[FadeIn(mob) for mob in [
             dot_on_circle, dot_on_curve, Q_dot, p_label, y_Q_label,
@@ -512,7 +512,8 @@ class TangentConstruction(MovingCameraScene):
         )
 
         self.play(construction_plane_group.animate.scale(0.75).move_to(extended_axes.get_center()))
-        # tan_full (3 rami) → extended_tan_branches (9 rami): conteggi diversi, no ReplacementTransform
+        # tan_full has 3 branches, extended_tan_branches has 9 — different counts,
+        # so we fade one out and the other in instead of a ReplacementTransform.
         self.play(
             ReplacementTransform(construction_axes,    extended_axes),
             ReplacementTransform(construction_x_label, extended_x_label),
@@ -572,9 +573,9 @@ class TangentConstruction(MovingCameraScene):
         final_text_2_item_3.next_to(final_text_2_item_2, DOWN, buff=0.2, aligned_edge=LEFT)
         final_text_2_item_4.next_to(final_text_2_item_3, DOWN, buff=0.2, aligned_edge=LEFT)
 
-        # Bullet 1 – dominio: ℝ \ {π/2 + kπ} (asse x con gap agli asintoti)
+        # Bullet 1 - domain: ℝ minus π/2 + kπ (x-axis with a gap at each asymptote)
         self.play(Write(final_text_2_item_1), run_time=text_fade_time)
-        domain_gap = 0.35   # gap in math-radians intorno a ogni asintoto
+        domain_gap = 0.35   # gap in radians left on each side of an asymptote
         domain_seg_ranges = [
             (-4*PI,                  -7*PI/2 - domain_gap),
             (-7*PI/2 + domain_gap,   -5*PI/2 - domain_gap),
@@ -598,7 +599,7 @@ class TangentConstruction(MovingCameraScene):
         self.play(FadeOut(domain_highlight), run_time=0.4)
         self.wait(bullet_pause)
 
-        # Bullet 2 – immagine: ℝ
+        # Bullet 2 - range: all reals
         self.play(Write(final_text_2_item_2), run_time=text_fade_time)
         y_axis_highlight = Line(
             extended_axes.c2p(0, -EX_CLIP), extended_axes.c2p(0, EX_CLIP),
@@ -611,7 +612,7 @@ class TangentConstruction(MovingCameraScene):
         self.play(FadeOut(y_axis_highlight), FadeOut(arrow_up), FadeOut(arrow_down), run_time=0.4)
         self.wait(bullet_pause)
 
-        # Bullet 3 – periodo: π (highlight two adjacent branches, then brace)
+        # Bullet 3 - period: π (highlight two adjacent branches, then a brace)
         self.play(Write(final_text_2_item_3), run_time=text_fade_time)
         central_branch = extended_axes.plot(
             np.tan, x_range=[-PI/2 + delta, PI/2 - delta, 0.003],
@@ -635,7 +636,7 @@ class TangentConstruction(MovingCameraScene):
         )
         self.wait(bullet_pause)
 
-        # Bullet 4 – simmetria rispetto all'origine
+        # Bullet 4 - symmetry about the origin
         self.play(Write(final_text_2_item_4), run_time=text_fade_time)
 
         def sym_pair(x_val):

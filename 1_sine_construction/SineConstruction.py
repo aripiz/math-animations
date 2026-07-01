@@ -251,12 +251,10 @@ class SineConstruction(MovingCameraScene):
         )
         self.play(Create(line), Create(arc))
 
-        # sine_curve ha un updater che modifica la struttura interna ogni frame:
-        # va aggiunto con self.add() per evitare il crash del zip in FadeIn.
-        # dashed_line cambia numero di trattini al variare della lunghezza:
-        # stessa soluzione.
-        # p_label e y_p_label hanno struttura fissa ma sono always_redraw:
-        # si sospendono gli updater durante il FadeIn e si riattivano subito dopo.
+        # sine_curve and dashed_line rebuild themselves every frame, so
+        # FadeIn would choke on them — just add() them straight to the scene.
+        # p_label and y_p_label are always_redraw too; pause their updaters
+        # for the FadeIn below, then switch them back on right after.
         self.add(sine_curve, dashed_line)
         p_label.suspend_updating()
         y_p_label.suspend_updating()
@@ -353,7 +351,7 @@ class SineConstruction(MovingCameraScene):
         final_text_2_item_3.next_to(final_text_2_item_2, DOWN, buff=0.2, aligned_edge=LEFT)
         final_text_2_item_4.next_to(final_text_2_item_3, DOWN, buff=0.2, aligned_edge=LEFT)
 
-        # Bullet 1 – dominio: ℝ (x-axis highlight)
+        # Bullet 1 - domain: all reals (highlight the x-axis)
         self.play(Write(final_text_2_item_1), run_time=text_fade_time)
         x_axis_highlight = Line(
             extended_axes.c2p(-4*PI, 0), extended_axes.c2p(4*PI, 0),
@@ -364,7 +362,7 @@ class SineConstruction(MovingCameraScene):
         self.play(FadeOut(x_axis_highlight), run_time=0.4)
         self.wait(bullet_pause)
 
-        # Bullet 2 – immagine: [−1, +1] (band highlight)
+        # Bullet 2 - range: [-1, 1] (highlight the band)
         self.play(Write(final_text_2_item_2), run_time=text_fade_time)
         image_band = Polygon(
             extended_axes.c2p(-4*PI, -1), extended_axes.c2p(4*PI, -1),
@@ -378,7 +376,7 @@ class SineConstruction(MovingCameraScene):
         self.play(FadeOut(image_band), FadeOut(image_upper), FadeOut(image_lower), run_time=0.4)
         self.wait(bullet_pause)
 
-        # Bullet 3 – periodo: 2π (cycles expanding outward from centre, then brace)
+        # Bullet 3 - period: 2π (cycles expanding outward from the centre, then a brace)
         self.play(Write(final_text_2_item_3), run_time=text_fade_time)
         cycle_ranges = [(0, TAU), (-TAU, 0), (TAU, 2*TAU), (-2*TAU, -TAU)]
         cycles = [
@@ -395,7 +393,7 @@ class SineConstruction(MovingCameraScene):
         self.play(*[FadeOut(mob) for mob in [*cycles, period_brace, period_label]], run_time=0.5)
         self.wait(bullet_pause)
 
-        # Bullet 4 – simmetria rispetto all'origine (two symmetric pairs)
+        # Bullet 4 - symmetry about the origin (two symmetric point pairs)
         self.play(Write(final_text_2_item_4), run_time=text_fade_time)
 
         def sym_pair(x_val):

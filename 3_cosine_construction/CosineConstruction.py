@@ -422,7 +422,7 @@ class CosineConstruction(MovingCameraScene):
         final_text_2_item_3.next_to(final_text_2_item_2, DOWN, buff=0.2, aligned_edge=LEFT)
         final_text_2_item_4.next_to(final_text_2_item_3, DOWN, buff=0.2, aligned_edge=LEFT)
 
-        # Bullet 1 – dominio: ℝ (x-axis highlight)
+        # Bullet 1 - domain: all reals (highlight the x-axis)
         self.play(Write(final_text_2_item_1), run_time=text_fade_time)
         x_axis_highlight = Line(
             extended_axes.c2p(-4*PI, 0), extended_axes.c2p(4*PI, 0),
@@ -433,7 +433,7 @@ class CosineConstruction(MovingCameraScene):
         self.play(FadeOut(x_axis_highlight), run_time=0.4)
         self.wait(bullet_pause)
 
-        # Bullet 2 – immagine: [−1, +1] (band highlight)
+        # Bullet 2 - range: [-1, 1] (highlight the band)
         self.play(Write(final_text_2_item_2), run_time=text_fade_time)
         image_band = Polygon(
             extended_axes.c2p(-4*PI, -1), extended_axes.c2p(4*PI, -1),
@@ -447,7 +447,7 @@ class CosineConstruction(MovingCameraScene):
         self.play(FadeOut(image_band), FadeOut(image_upper), FadeOut(image_lower), run_time=0.4)
         self.wait(bullet_pause)
 
-        # Bullet 3 – periodo: 2π (cycles expanding outward from centre, then brace)
+        # Bullet 3 - period: 2π (cycles expanding outward from the centre, then a brace)
         self.play(Write(final_text_2_item_3), run_time=text_fade_time)
         cycle_ranges = [(0, TAU), (-TAU, 0), (TAU, 2*TAU), (-2*TAU, -TAU)]
         cycles = [
@@ -464,7 +464,7 @@ class CosineConstruction(MovingCameraScene):
         self.play(*[FadeOut(mob) for mob in [*cycles, period_brace, period_label]], run_time=0.5)
         self.wait(bullet_pause)
 
-        # Bullet 4 – simmetria rispetto all'asse y (funzione pari: cos(-x) = cos(x))
+        # Bullet 4 - symmetry about the y-axis (even function: cos(-x) = cos(x))
         self.play(Write(final_text_2_item_4), run_time=text_fade_time)
 
         def sym_pair_even(x_val):

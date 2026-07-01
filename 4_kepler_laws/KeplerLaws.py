@@ -48,14 +48,11 @@ class KeplerLaws(MovingCameraScene):
 
         # ── Text blocks ───────────────────────────────────────────────────────
 
-        # Title  (same scale as other animations in this repo)
         title = Tex(r"Le tre leggi di Keplero").scale(1.25)
 
-        # Law texts — kept in a narrow strip at the very bottom of the frame
-        # (the animation region is shifted UP so there is no overlap)
         def law_tex(*parts):
             t = Tex(*parts, font_size=38)
-            t.to_edge(DOWN,)
+            t.to_edge(DOWN)
             return t
 
         law_1_text = law_tex(
@@ -71,20 +68,21 @@ class KeplerLaws(MovingCameraScene):
             r"dell'orbita è una costante uguale per tutti i pianeti del sistema solare.",
         )
 
-        # Law headers — displayed at the top of the frame during each law
         def law_header(text):
             h = Tex(text, font_size=40)
             h.to_edge(UP)
-            rect = SurroundingRectangle(h, color=WHITE, corner_radius=0.1, buff=0.15, stroke_width=1.5) 
-            return VGroup(h, rect)
+            rect = SurroundingRectangle(
+                h, color=WHITE,
+                fill_color=BLACK, fill_opacity=1,
+                corner_radius=0.12, buff=0.22, stroke_width=1.5,
+            )
+            return VGroup(rect, h)
 
         law_1_header = law_header(r"Prima legge")
         law_2_header = law_header(r"Seconda legge")
         law_3_header = law_header(r"Terza legge")
 
         # ── Scene vertical offset ─────────────────────────────────────────────
-        # All animated objects are raised by SCENE_UP so they live in the upper
-        # portion of the frame and never overlap the text band at the bottom.
         SCENE_UP = UP * 0.7
 
         # ── Intro ─────────────────────────────────────────────────────────────
@@ -99,36 +97,40 @@ class KeplerLaws(MovingCameraScene):
         b1   = 1.8
         c1   = np.sqrt(a1**2 - b1**2)
         e1   = c1 / a1
-        ctr1 = SCENE_UP            # centre of the ellipse (raised)
+        ctr1 = SCENE_UP
 
         orbit1 = ParametricFunction(
             lambda t: ellipse_point(a1, b1, t, center=ctr1),
             t_range=[0, TAU], color=BLUE,
         )
 
-        # Focus positions
         foc1_pos = ctr1 + RIGHT * c1
         foc2_pos = ctr1 + LEFT  * c1
 
         focus_1       = Dot(foc1_pos, color=YELLOW, radius=0.10)
         focus_2       = Dot(foc2_pos, color=GRAY,   radius=0.07)
         sun           = Dot(foc1_pos, color=YELLOW, radius=0.12)
+        center        = Dot(ctr1, color=GRAY, radius=0.05)
         focus_1_label = MathTex(r"F_1", font_size=28).next_to(focus_1, UP, buff=0.12)
         focus_2_label = MathTex(r"F_2", font_size=28).next_to(focus_2, UP, buff=0.12)
-        # Sole label inside the ellipse (to the left of the focus dot)
-        sun_label     = Tex(r"Sole", font_size=26).next_to(sun, LEFT, buff=0.18)
+        sun_label     = Tex(r"Sole", font_size=26).next_to(sun, DOWN, buff=0.18)
 
-        # Dashed axes to show the semi-axes
         semi_a_line = DashedLine(
             ctr1 + LEFT * a1, ctr1 + RIGHT * a1, color=GRAY, stroke_width=1.0
         )
         semi_b_line = DashedLine(
-            ctr1 + DOWN * b1, ctr1 + UP   * b1, color=GRAY, stroke_width=1.0
+            ctr1 + DOWN * b1, ctr1 + UP * b1, color=GRAY, stroke_width=1.0
         )
-        a_label = MathTex(r"a", font_size=28).next_to(ctr1 + RIGHT * a1, RIGHT, buff=0.1)
-        b_label = MathTex(r"b", font_size=28).next_to(ctr1 + UP    * b1, UP,    buff=0.1)
+        a_label = MathTex(r"a", font_size=28).next_to(ctr1 + RIGHT * (a1 * 0.5), DOWN, buff=0.12)
+        b_label = MathTex(r"b", font_size=28).next_to(ctr1 + UP    * (b1 * 0.5), LEFT, buff=0.12)
 
-        # Planet on a ValueTracker
+        peri1_pos = ctr1 + RIGHT * a1
+        aph1_pos  = ctr1 + LEFT  * a1
+        peri1_dot = Dot(peri1_pos, color=WHITE, radius=0.05)
+        aph1_dot  = Dot(aph1_pos,  color=WHITE, radius=0.05)
+        peri1_lbl = Tex(r"Perielio", font_size=22).next_to(peri1_pos, UR, buff=0.10)
+        aph1_lbl  = Tex(r"Afelio",   font_size=22).next_to(aph1_pos,  UL, buff=0.10)
+
         t1      = ValueTracker(0.0)
         planet1 = always_redraw(lambda: Dot(
             ellipse_point(a1, b1, t1.get_value(), center=ctr1),
@@ -139,11 +141,9 @@ class KeplerLaws(MovingCameraScene):
             planet1.get_center(),
             color=GREEN, stroke_width=2,
         ))
-        planet1_label = always_redraw(lambda: Tex(
-            r"Pianeta", font_size=24
-        ).next_to(planet1, UP, buff=0.08))
+        planet1_label = Tex(r"Pianeta", font_size=24)
+        planet1_label.add_updater(lambda m: m.next_to(planet1, UP, buff=0.08))
 
-        # -- animate --
         self.play(FadeIn(law_1_header), run_time=1.0)
         self.wait(0.8)
         self.play(FadeIn(law_1_text, shift=0.15 * UP), run_time=2.2)
@@ -151,22 +151,22 @@ class KeplerLaws(MovingCameraScene):
 
         self.play(Create(orbit1), run_time=2)
         self.play(
-            FadeIn(semi_a_line), FadeIn(semi_b_line),
+            FadeIn(semi_a_line), FadeIn(semi_b_line),  FadeIn(center),
             Write(a_label), Write(b_label),
             run_time=1.4,
         )
         self.play(
             FadeIn(focus_1), FadeIn(focus_2),
             Write(focus_1_label), Write(focus_2_label),
+            FadeIn(peri1_dot), FadeIn(aph1_dot),
+            Write(peri1_lbl), Write(aph1_lbl),
             run_time=1.4,
         )
         self.play(FadeIn(sun), Write(sun_label), run_time=1.0)
         self.wait(short_pause)
 
-        # Remove all decorations before planet starts moving;
-        # sun_label removed here so it doesn't clutter the orbit animation
         self.play(
-            FadeOut(semi_a_line), FadeOut(semi_b_line),
+            FadeOut(semi_a_line), FadeOut(semi_b_line), FadeOut(center),
             FadeOut(a_label), FadeOut(b_label),
             FadeOut(focus_2), FadeOut(focus_2_label),
             FadeOut(focus_1_label),
@@ -178,12 +178,14 @@ class KeplerLaws(MovingCameraScene):
         self.play(t1.animate.set_value(TAU), run_time=10, rate_func=linear)
         self.wait(long_pause)
 
-        law1_group = VGroup(orbit1, focus_1, sun, planet1, radius_line1, planet1_label)
+        law1_group = VGroup(
+            orbit1, focus_1, sun, planet1, radius_line1, planet1_label,
+            peri1_dot, aph1_dot, peri1_lbl, aph1_lbl,
+        )
 
         # ==================================================================
         # LAW 2 — Equal areas in equal times
         # ==================================================================
-        # First: clear ALL remnants of Law 1 scene, then show Law 2 text
         self.play(
             FadeOut(law1_group),
             FadeOut(law_1_text),
@@ -195,17 +197,14 @@ class KeplerLaws(MovingCameraScene):
         self.play(FadeIn(law_2_text, shift=0.15 * UP), run_time=2.2)
         self.wait(read_pause)
 
-        # Law 2: orbit stays centred (ctr2 = ctr1).
-        # Timer top-left, area panel top-right (anchored to RIGHT edge so
-        # wide formulas extend leftward and stay on-screen).
         ctr2     = ctr1
-        foc2_sun = ctr2 + RIGHT * c1
+        sun2_pos = ctr2 + RIGHT * c1
 
-        orbit2 = ParametricFunction(
+        orbit2   = ParametricFunction(
             lambda t: ellipse_point(a1, b1, t, center=ctr2),
             t_range=[0, TAU], color=BLUE,
         )
-        sun2 = Dot(foc2_sun, color=YELLOW, radius=0.12)
+        sun2     = Dot(sun2_pos, color=YELLOW, radius=0.12)
         sun2_lbl = Tex(r"Sole", font_size=26).next_to(sun2, LEFT, buff=0.16)
         self.play(Create(orbit2), FadeIn(sun2), Write(sun2_lbl), run_time=1.6)
         self.wait(0.4)
@@ -213,23 +212,49 @@ class KeplerLaws(MovingCameraScene):
 
         focus_pos = sun2.get_center()
 
-        # ── Time counter (top-left) ──
+        peri2_pos = ctr2 + RIGHT * a1
+        aph2_pos  = ctr2 + LEFT  * a1
+        peri2_dot = Dot(peri2_pos, color=WHITE, radius=0.05)
+        aph2_dot  = Dot(aph2_pos,  color=WHITE, radius=0.05)
+        peri2_lbl = Tex(r"Perielio", font_size=22).next_to(peri2_pos, DOWN, buff=0.12)
+        aph2_lbl  = Tex(r"Afelio",   font_size=22).next_to(aph2_pos,  UP,   buff=0.12)
+
+        v_max_arrow = Arrow(
+            peri2_pos, peri2_pos + UP * 0.70,
+            buff=0, color=YELLOW, stroke_width=2, max_tip_length_to_length_ratio=0.18,
+        )
+        v_min_arrow = Arrow(
+            aph2_pos, aph2_pos + DOWN * 0.40,
+            buff=0, color=YELLOW, stroke_width=2, max_tip_length_to_length_ratio=0.18,
+        )
+        v_max_label = MathTex(r"\vec{v}_{\max}", font_size=24, color=YELLOW).next_to(v_max_arrow.get_tip(), RIGHT, buff=0.08)
+        v_min_label = MathTex(r"\vec{v}_{\min}", font_size=24, color=YELLOW).next_to(v_min_arrow.get_tip(), LEFT,  buff=0.08)
+
+        self.play(
+            FadeIn(peri2_dot), FadeIn(aph2_dot),
+            Write(peri2_lbl), Write(aph2_lbl),
+            GrowArrow(v_max_arrow), GrowArrow(v_min_arrow),
+            Write(v_max_label), Write(v_min_label),
+            run_time=1.2,
+        )
+        self.wait(0.4)
+
         time_tracker = ValueTracker(0.0)
         arc_dt = 4.0
 
-        timer_label = Tex(r"Tempo:", font_size=30)
-        timer_value = DecimalNumber(0.0, num_decimal_places=1, font_size=34, color=WHITE)
-        timer_value.add_updater(lambda m: m.set_value(time_tracker.get_value()))
-        timer_unit  = MathTex(r"\Delta t", font_size=34, color=WHITE)
+        timer_label2 = Tex(r"Tempo:", font_size=30)
+        timer_value2 = DecimalNumber(0.0, num_decimal_places=1, font_size=30, color=WHITE)
+        timer_value2.add_updater(lambda m: m.set_value(time_tracker.get_value()))
+        timer_unit2  = MathTex(r"\Delta t", font_size=30, color=WHITE)
 
-        timer_row = VGroup(timer_label, timer_value, timer_unit)
-        timer_row.arrange(RIGHT, buff=0.20)
-        # Position below the law header, flush left
-        timer_row.next_to(law_2_header, DOWN, buff=0.38)
-        timer_row.to_edge(LEFT, buff=0.50)
-        self.play(FadeIn(timer_row), run_time=0.8)
+        timer_row2 = VGroup(timer_label2, timer_value2, timer_unit2)
+        timer_row2.arrange(RIGHT, buff=0.20)
+        timer_value2.align_to(timer_label2[0][0], DOWN)
+        timer_unit2.align_to(timer_label2[0][0], DOWN)
+        timer_row2.next_to(law_2_header, DOWN, buff=0.38)
+        timer_row2.to_edge(LEFT, buff=0.50)
+        self.play(FadeIn(timer_row2), run_time=0.8)
 
-        # Three consecutive equal-time arcs
         DM         = 0.70
         M_starts   = [0.15, PI / 2, PI - DM / 2]
         arc_colors = [BLUE, ORANGE, GREEN]
@@ -248,9 +273,7 @@ class KeplerLaws(MovingCameraScene):
         static_areas          = VGroup()
         area_labels_on_sector = VGroup()
 
-        for i, (M_s, col, aname) in enumerate(
-            zip(M_starts, arc_colors, arc_names)
-        ):
+        for i, (M_s, col, aname) in enumerate(zip(M_starts, arc_colors, arc_names)):
             E_start = solve_kepler_equation(M_s,      e1)
             E_end   = solve_kepler_equation(M_s + DM, e1)
             E_tracker.set_value(E_start)
@@ -277,25 +300,21 @@ class KeplerLaws(MovingCameraScene):
             self.add(frozen)
             static_areas.add(frozen)
 
-            # Area label placed inside the sector
-            E_mid    = (E_start + E_end) / 2
-            arc_mid  = ellipse_point(a1, b1, E_mid, center=ctr2)
-            lbl_pos  = focus_pos + 0.62 * (arc_mid - focus_pos)
+            E_mid   = (E_start + E_end) / 2
+            arc_mid = ellipse_point(a1, b1, E_mid, center=ctr2)
+            lbl_pos = focus_pos + 0.62 * (arc_mid - focus_pos)
             area_lbl = MathTex(aname, font_size=30, color=col)
             area_lbl.move_to(lbl_pos)
             self.play(FadeIn(area_lbl), run_time=0.4)
             area_labels_on_sector.add(area_lbl)
             self.wait(0.4)
 
-        # ── Conclusion: centred below orbit, above the law-text strip ──
         equal_text = MathTex(
             r"\Delta t_1 = \Delta t_2 = \Delta t_3",
             r"\;\Leftrightarrow \;",
             r"A_1 = A_2 = A_3",
             font_size=34,
         )
-        #equal_text[0].set_color(WHITE)
-        #equal_text[2].set_color(YELLOW)
         equal_text.next_to(orbit2, DOWN, buff=0.45)
 
         self.play(Write(equal_text), run_time=1.8)
@@ -305,12 +324,13 @@ class KeplerLaws(MovingCameraScene):
         law2_group = VGroup(
             orbit2, sun2, planet2, rv2,
             static_areas, area_labels_on_sector,
-            timer_row,
-            equal_text,
+            timer_row2, equal_text,
+            peri2_dot, aph2_dot, peri2_lbl, aph2_lbl,
+            v_max_arrow, v_min_arrow, v_max_label, v_min_label,
         )
 
         # ==================================================================
-        # LAW 3 — T² ∝ a³  (purely symbolic, three orbits)
+        # LAW 3 — T² ∝ a³  (three real planetary orbits)
         # ==================================================================
         self.play(
             FadeOut(law2_group),
@@ -331,27 +351,37 @@ class KeplerLaws(MovingCameraScene):
             (r"Giove",  5.203, 11.862, ORANGE),
         ]
 
-        # Giove → 1.9 scene units; all orbits share the same visual eccentricity
+        # Jupiter's orbital period = 11.86 scene-seconds; others scale proportionally
+        JUP_PERIOD_SC  = 11.86
+        period_scale   = JUP_PERIOD_SC / 11.862          # ≈ 1.0 s per Earth-year
+        period_terra   = planets_data[0][2] * period_scale  # ≈ 1.00 s
+        period_marte   = planets_data[1][2] * period_scale  # ≈ 1.88 s
+        period_giove   = planets_data[2][2] * period_scale  # ≈ 11.86 s
+
+        # Jupiter → 1.9 scene units; same visual eccentricity for all orbits
         AU_to_scene = 1.9 / 5.203
         e3_scene    = 0.30
 
-        # Sun a bit left-of-centre so there is room for the right-side panel
-        sun3_pos = SCENE_UP + LEFT * 3.4
+        sun3_pos = SCENE_UP + LEFT * 3.0 + DOWN * 0.2
         sun3     = Dot(sun3_pos, color=YELLOW, radius=0.14)
         sun3_lbl = Tex(r"Sole", font_size=24).next_to(sun3, DR, buff=0.10)
 
-        orbits3        = VGroup()
-        planets3       = VGroup()
-        radius_lines3  = VGroup()
-        orbital_labels = VGroup()
-        global_t       = ValueTracker(0.0)
+        orbits3       = VGroup()
+        planets3      = VGroup()
+        radius_lines3 = VGroup()
+        orbit_labels  = VGroup()
+        global_t      = ValueTracker(0.0)
+
+        # Precompute per-planet scene geometry for later reuse (braces)
+        planet_geom = []   # list of (a_sc, b_sc, c_sc, center, period_sc)
 
         for pname, a_au, T_yr, col in planets_data:
             a_sc      = a_au * AU_to_scene
             b_sc      = a_sc * np.sqrt(1 - e3_scene**2)
             c_sc      = a_sc * e3_scene
             center    = sun3_pos + RIGHT * c_sc
-            period_sc = T_yr * (1.5 / 11.862) * 15   # Jupiter ≈ 15 s per orbit
+            period_sc = T_yr * period_scale
+            planet_geom.append((a_sc, b_sc, c_sc, center, period_sc))
 
             orbit = ParametricFunction(
                 lambda t, aa=a_sc, bb=b_sc, cc=center: ellipse_point(aa, bb, t, center=cc),
@@ -377,7 +407,6 @@ class KeplerLaws(MovingCameraScene):
             planets3.add(planet)
             radius_lines3.add(rline)
 
-            # Label: Terra on the left (tiny orbit, top would overlap Marte); others above top
             if pname == r"Terra":
                 lbl_anchor = center + LEFT * a_sc
                 lbl = Tex(pname, font_size=30, color=col)
@@ -386,17 +415,33 @@ class KeplerLaws(MovingCameraScene):
                 top_pos = center + UP * b_sc
                 lbl = Tex(pname, font_size=30, color=col)
                 lbl.next_to(np.array([top_pos[0], top_pos[1], 0]), UP, buff=0.12)
-            orbital_labels.add(lbl)
+            orbit_labels.add(lbl)
 
-        # ── Right-side verification panel ──
-        # Whole block anchored to RIGHT edge so rows extend leftward,
-        # never going off-screen.
+        # ── Elapsed-time counter — same layout and position as Law 2 ──
+        # Value displayed in T_Terra units
+
+        timer_label3 = Tex(r"Tempo:", font_size=30)
+        timer_value3 = DecimalNumber(0.0, num_decimal_places=2, font_size=30, color=WHITE)
+        timer_value3.add_updater(lambda m: m.set_value(global_t.get_value() / period_terra))
+        timer_unit3  = MathTex(r"T_{\text{Terra}}", font_size=30, color=WHITE)
+
+        timer_row3 = VGroup(timer_label3, timer_value3, timer_unit3)
+        timer_row3.arrange(RIGHT, buff=0.20)
+        timer_value3.align_to(timer_label3[0][0], DOWN)
+        timer_unit3.align_to(timer_label3[0][0], UP)
+        timer_row3.next_to(law_3_header, DOWN, buff=0.38)
+        timer_row3.to_edge(LEFT, buff=0.50)
+
+        # ── Right-side verification panel (pre-built, rows revealed one by one) ──
         panel_title = Tex(r"Confrontiamo per i diversi pianeti $T^2/a^3$:", font_size=30)
-        panel_subtitle = Tex(r"1 yr è un \textit{anno terrestre}\\ 1 au  è la \textit{distanza media Terra-Sole}", font_size=30,)
+        panel_subtitle = Tex(
+            r"1 yr è un \textit{anno terrestre}\\ 1 au è la \textit{distanza media Terra-Sole}",
+            font_size=30,
+        )
 
         panel_rows = VGroup()
         for pname, a_au, T_yr, col in planets_data:
-            ratio_val = T_yr**2 / a_au**3
+            ratio_val = round(T_yr**2 / a_au**3, 2)
             row = MathTex(
                 rf"\text{{{pname}}}: \;"
                 rf"\frac{{\left({T_yr:.2f}\,\text{{yr}}\right)^2}}"
@@ -407,54 +452,75 @@ class KeplerLaws(MovingCameraScene):
             panel_rows.add(row)
         panel_rows.arrange(DOWN, buff=0.38, aligned_edge=LEFT)
 
-        # Stack title + rows, anchor to right edge, align top with orbit group
         panel_block = VGroup(panel_title, panel_subtitle, panel_rows)
         panel_block.arrange(DOWN, buff=0.38, aligned_edge=LEFT)
         panel_block.to_edge(RIGHT, buff=0.50)
         panel_block.align_to(orbits3, UP).shift(DOWN * 0.1)
 
-        # Formula placed below the orbit group (same font_size as Law 2 equal_text)
+        # Show panel title and subtitle before orbiting starts
+        self.play(FadeIn(sun3), Write(sun3_lbl), run_time=1.0)
+        self.play(Create(orbits3), run_time=2.5)
+        self.play(FadeIn(orbit_labels), run_time=1.2)
+        self.play(FadeIn(planets3), FadeIn(radius_lines3), run_time=1.0)
+        self.play(FadeIn(timer_row3), run_time=0.8)
+        self.wait(short_pause)
+
+        self.play(Write(panel_title), run_time=1.0)
+        self.play(Write(panel_subtitle), run_time=1.0)
+        self.wait(0.5)
+
+        # ── Main loop: orbit until each planet's first completion ──
+        prev_t = 0.0
+        for i, (pname, a_au, T_yr, col) in enumerate(planets_data):
+            a_sc, b_sc, c_sc, center, period_sc = planet_geom[i]
+            run_time = period_sc - prev_t
+
+            # Animate planets until this planet completes its first orbit
+            self.play(
+                global_t.animate.set_value(period_sc),
+                run_time=run_time, rate_func=linear,
+            )
+
+            # ── Highlight completed orbit ──
+            orbit_hl = ParametricFunction(
+                lambda t, aa=a_sc, bb=b_sc, cc=center: ellipse_point(aa, bb, t, center=cc),
+                t_range=[0, TAU], color=YELLOW, stroke_width=3.5,
+            )
+
+            # ── Brace for semi-major axis of this orbit ──
+            right_tip  = center + RIGHT * a_sc
+            ctr_dot    = Dot(center, color=GRAY, radius=0.05)
+            brace      = BraceBetweenPoints(center, right_tip, direction=DOWN)
+            brace_lbl  = brace.get_tex(r"a")
+
+            # Show highlight + brace + indicate timer simultaneously
+            self.play(
+                Create(orbit_hl),
+                FadeIn(brace), FadeIn(ctr_dot), Write(brace_lbl),
+                Indicate(timer_row3, color=YELLOW, scale_factor=1.3),
+                run_time=1.0,
+            )
+            self.wait(0.6)
+
+            # Show the data row for this planet
+            self.play(Write(panel_rows[i]), run_time=1.2)
+            self.wait(0.6)
+
+            # Remove highlight and brace before continuing
+            self.play(
+                FadeOut(orbit_hl),
+                FadeOut(brace), FadeOut(ctr_dot), FadeOut(brace_lbl),
+                run_time=0.6,
+            )
+
+            prev_t = period_sc
+
+        self.wait(read_pause)
+
+        # ── Summary formula ──
         formula_law = MathTex(r"\dfrac{T^2}{a^3} = \text{costante}", font_size=34)
         formula_law.next_to(orbits3, DOWN, buff=0.38)
 
-        # Brace on Jupiter's orbit to introduce 'a'
-        a_giove_sc         = planets_data[-1][1] * AU_to_scene
-        c_giove_sc         = a_giove_sc * e3_scene
-        ctr_giove          = sun3_pos + RIGHT * c_giove_sc
-        right_tip          = ctr_giove + RIGHT * a_giove_sc
-        semi_a_brace       = BraceBetweenPoints(sun3_pos, right_tip, direction=DOWN)
-        semi_a_label_brace = semi_a_brace.get_tex(r"a")
-
-        # -- animate --
-        self.play(FadeIn(sun3), Write(sun3_lbl), run_time=1.0)
-        self.play(Create(orbits3), run_time=2.5)
-        self.play(FadeIn(orbital_labels), run_time=1.2)
-        self.play(FadeIn(planets3), FadeIn(radius_lines3), run_time=1.0)
-        self.wait(short_pause)
-
-        # Brace to show what 'a' means
-        self.play(FadeIn(semi_a_brace), Write(semi_a_label_brace), run_time=1.2)
-        self.wait(short_pause)
-        self.play(FadeOut(semi_a_brace), FadeOut(semi_a_label_brace), run_time=0.8)
-
-        # Planets orbit for a while to show speed difference
-        self.play(global_t.animate.set_value(8.0), run_time=10, rate_func=linear)
-
-        # Verification panel: title first, then one row per planet
-        self.play(Write(panel_title), run_time=1.2)
-        self.wait(0.4)
-        self.play(Write(panel_subtitle), run_time=1.2)
-        self.wait(read_pause)
-        for row, (pname, a_au, T_yr, col) in zip(panel_rows, planets_data):
-            self.play(
-                global_t.animate.set_value(global_t.get_value() + 2.5),
-                Write(row),
-                run_time=2.5,
-            )
-            self.wait(0.5)
-        self.wait(read_pause)
-
-        # Compact law
         self.play(FadeIn(formula_law, shift=0.1 * UP), run_time=1.4)
         self.play(Indicate(formula_law, color=YELLOW, scale_factor=1.08), run_time=1.0)
         self.wait(long_pause)
